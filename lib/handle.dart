@@ -6,11 +6,11 @@ import 'package:multicast_dns/multicast_dns.dart';
 
 class Handle with ChangeNotifier {
   List<Speaker> arrSpeaker = [];
-  var startTime = DateTime.now().millisecondsSinceEpoch;
-  var timeDelay = 0;
 
   Future<void> handle() async {
     arrSpeaker.clear();
+    var startTime = DateTime.now().millisecondsSinceEpoch;
+    var timeDelay = 0;
     final MDnsClient client = Platform.isAndroid == true
         ? MDnsClient(rawDatagramSocketFactory: (dynamic host, int port,
             {bool? reuseAddress, bool? reusePort, int? ttl}) {
