@@ -14,7 +14,6 @@ class UIScreen extends StatefulWidget {
 class _UIScreen extends State<UIScreen> {
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Scan Device'),
@@ -35,9 +34,9 @@ class _UIScreen extends State<UIScreen> {
       ),
     );
   }
+
   Future<Null> _refreshLocal() async {
     Provider.of<Handle>(context, listen: false).arrSpeaker.clear();
     Provider.of<Handle>(context, listen: false).handle();
   }
 }
-
