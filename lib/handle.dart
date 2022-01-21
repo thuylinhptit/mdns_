@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:mdns/main.dart';
 import 'package:multicast_dns/multicast_dns.dart';
@@ -9,11 +11,14 @@ class Handle with ChangeNotifier {
   List<String> arrDeviceId = [];
 
   Future<void> handle() async {
-    final MDnsClient client = MDnsClient();
-    //  final MDnsClient client = MDnsClient(rawDatagramSocketFactory:
-    //      (dynamic host, int port, {bool?reuseAddress, bool? reusePort, int? ttl}) {
-    //    return RawDatagramSocket.bind(host, port, reuseAddress: true, reusePort: false, ttl: ttl! );
-    //  });
+    final MDnsClient client = Platform.isAndroid == true
+        ? MDnsClient(rawDatagramSocketFactory: (dynamic host, int port,
+            {bool? reuseAddress, bool? reusePort, int? ttl}) {
+            return RawDatagramSocket.bind(host, port,
+                reuseAddress: true, reusePort: false, ttl: ttl!);
+          })
+        : MDnsClient();
+
     await client.start();
     var startTime = DateTime.now().millisecondsSinceEpoch;
     var timeDelay = 0;
@@ -23,7 +28,6 @@ class Handle with ChangeNotifier {
       await for (final SrvResourceRecord srv
           in client.lookup<SrvResourceRecord>(
               ResourceRecordQuery.service(ptr.domainName))) {
-        final String bundleId = ptr.domainName;
         await client
             .lookup<TxtResourceRecord>(ResourceRecordQuery.text(ptr.domainName))
             .forEach((i) {
@@ -50,7 +54,6 @@ class Handle with ChangeNotifier {
             in client.lookup<IPAddressResourceRecord>(
                 ResourceRecordQuery.addressIPv4(srv.target))) {
           if (srv.target == srv2) {
-            //print(ip.address);
             arrIP.add(ip.address.address);
           }
         }
