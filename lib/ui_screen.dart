@@ -29,14 +29,13 @@ class _UIScreen extends State<UIScreen> {
                           _.arrDeviceId[i], _.arrTimeDelay[i]));
                 },
               ),
-              onRefresh: _refreshLocal);
+              onRefresh: _refresh);
         },
       ),
     );
   }
 
-  Future<Null> _refreshLocal() async {
-    Provider.of<Handle>(context, listen: false).arrSpeaker.clear();
-    Provider.of<Handle>(context, listen: false).handle();
+  Future<Null> _refresh() async {
+    Provider.of<Handle>(context, listen: false).refreshLocal(context);
   }
 }

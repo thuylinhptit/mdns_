@@ -1,8 +1,8 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:mdns/main.dart';
 import 'package:multicast_dns/multicast_dns.dart';
+import 'package:provider/provider.dart';
 
 class Handle with ChangeNotifier {
   List<SrvResourceRecord> arrSpeaker = [];
@@ -11,6 +11,7 @@ class Handle with ChangeNotifier {
   List<String> arrDeviceId = [];
 
   Future<void> handle() async {
+    arrSpeaker.clear();
     final MDnsClient client = Platform.isAndroid == true
         ? MDnsClient(rawDatagramSocketFactory: (dynamic host, int port,
             {bool? reuseAddress, bool? reusePort, int? ttl}) {
@@ -36,6 +37,7 @@ class Handle with ChangeNotifier {
             timeDelay = endTime - startTime;
             arrTimeDelay.add(timeDelay);
             arrSpeaker.add(srv);
+            print(arrSpeaker.length);
             var str = i.text;
             var start = "\n";
             var end = "\n";
@@ -61,6 +63,11 @@ class Handle with ChangeNotifier {
     }
     client.stop();
     notifyListeners();
-    print('Done.');
+  }
+
+  Future<void> refreshLocal(BuildContext context) async {
+    Provider.of<Handle>(context, listen: false).arrSpeaker.clear();
+    notifyListeners();
+    Provider.of<Handle>(context, listen: false).handle();
   }
 }
