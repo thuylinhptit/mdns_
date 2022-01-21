@@ -29,8 +29,6 @@ class Handle with ChangeNotifier {
             .lookup<TxtResourceRecord>(ResourceRecordQuery.text(ptr.domainName))
             .forEach((i) async {
           if (i.text.contains('model=Model')) {
-            var endTime = DateTime.now().millisecondsSinceEpoch;
-            timeDelay = endTime - startTime;
             var str = i.text;
             var start = "\n";
             var end = "\n";
@@ -42,8 +40,14 @@ class Handle with ChangeNotifier {
             await for (final IPAddressResourceRecord ip
                 in client.lookup<IPAddressResourceRecord>(
                     ResourceRecordQuery.addressIPv4(srv.target))) {
-              arrSpeaker.add(
-                  Speaker(srv.name, ip.address.address, deviceId, timeDelay));
+              var endTime = DateTime.now().millisecondsSinceEpoch;
+              timeDelay = endTime - startTime;
+              if (arrSpeaker
+                  .where((element) => element.ip == ip.address.address)
+                  .isEmpty) {
+                arrSpeaker.add(
+                    Speaker(srv.name, ip.address.address, deviceId, timeDelay));
+              }
             }
           }
         });
