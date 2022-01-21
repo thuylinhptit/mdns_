@@ -1,14 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mdns/main.dart';
+import 'package:mdns/speaker.dart';
 import 'package:multicast_dns/multicast_dns.dart';
-import 'package:provider/provider.dart';
 
 class Handle with ChangeNotifier {
-  List<SrvResourceRecord> arrSpeaker = [];
-  List<int> arrTimeDelay = [];
-  List<String> arrIP = [];
-  List<String> arrDeviceId = [];
+  List<Speaker> arrSpeaker = [];
+  var startTime = DateTime.now().millisecondsSinceEpoch;
+  var timeDelay = 0;
 
   Future<void> handle() async {
     arrSpeaker.clear();
@@ -21,9 +20,6 @@ class Handle with ChangeNotifier {
         : MDnsClient();
 
     await client.start();
-    var startTime = DateTime.now().millisecondsSinceEpoch;
-    var timeDelay = 0;
-    String srv2 = '';
     await for (final PtrResourceRecord ptr in client
         .lookup<PtrResourceRecord>(ResourceRecordQuery.serverPointer(name))) {
       await for (final SrvResourceRecord srv
@@ -31,34 +27,26 @@ class Handle with ChangeNotifier {
               ResourceRecordQuery.service(ptr.domainName))) {
         await client
             .lookup<TxtResourceRecord>(ResourceRecordQuery.text(ptr.domainName))
-            .forEach((i) {
+            .forEach((i) async {
           if (i.text.contains('model=Model')) {
             var endTime = DateTime.now().millisecondsSinceEpoch;
             timeDelay = endTime - startTime;
-            arrTimeDelay.add(timeDelay);
-            arrSpeaker.add(srv);
-            print(arrSpeaker.length);
             var str = i.text;
             var start = "\n";
             var end = "\n";
             var startIndex = str.indexOf(start);
             var endIndex = str.indexOf(end, startIndex + start.length);
-            print(str
+            var deviceId = str
                 .substring(startIndex + start.length, endIndex)
-                .substring("deviceid=".length));
-            arrDeviceId.add(str
-                .substring(startIndex + start.length, endIndex)
-                .substring("deviceid=".length));
-            srv2 = srv.target;
+                .substring("deviceid=".length);
+            await for (final IPAddressResourceRecord ip
+                in client.lookup<IPAddressResourceRecord>(
+                    ResourceRecordQuery.addressIPv4(srv.target))) {
+              arrSpeaker.add(
+                  Speaker(srv.name, ip.address.address, deviceId, timeDelay));
+            }
           }
         });
-        await for (final IPAddressResourceRecord ip
-            in client.lookup<IPAddressResourceRecord>(
-                ResourceRecordQuery.addressIPv4(srv.target))) {
-          if (srv.target == srv2) {
-            arrIP.add(ip.address.address);
-          }
-        }
       }
     }
     client.stop();
@@ -66,8 +54,8 @@ class Handle with ChangeNotifier {
   }
 
   Future<void> refreshLocal(BuildContext context) async {
-    Provider.of<Handle>(context, listen: false).arrSpeaker.clear();
+    arrSpeaker.clear();
     notifyListeners();
-    Provider.of<Handle>(context, listen: false).handle();
+    handle();
   }
 }

@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mdns/handle.dart';
 import 'package:mdns/item.dart';
-import 'package:mdns/speaker.dart';
 import 'package:provider/provider.dart';
 
-class UIScreen extends StatefulWidget {
+class UIScreen extends StatelessWidget {
   const UIScreen({Key? key}) : super(key: key);
 
-  @override
-  _UIScreen createState() => _UIScreen();
-}
-
-class _UIScreen extends State<UIScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,23 +13,22 @@ class _UIScreen extends State<UIScreen> {
         title: const Text('Scan Device'),
       ),
       body: Consumer<Handle>(
-        builder: (context, _, child) {
+        builder: (context, handle, child) {
           return RefreshIndicator(
               child: ListView.builder(
-                itemCount: _.arrSpeaker.length,
+                itemCount: handle.arrSpeaker.length,
                 itemBuilder: (context, i) {
                   return Item(
-                      speaker: Speaker(_.arrSpeaker[i].name, _.arrIP[i],
-                          _.arrDeviceId[i], _.arrTimeDelay[i]));
+                      speaker: Provider.of<Handle>(context, listen: false)
+                          .arrSpeaker[i]);
                 },
               ),
-              onRefresh: _refresh);
+              onRefresh: () async {
+                Provider.of<Handle>(context, listen: false)
+                    .refreshLocal(context);
+              });
         },
       ),
     );
-  }
-
-  Future<Null> _refresh() async {
-    Provider.of<Handle>(context, listen: false).refreshLocal(context);
   }
 }
