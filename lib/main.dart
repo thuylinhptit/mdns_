@@ -21,8 +21,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     Provider.of<Handle>(context, listen: false).handle();
     return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: UIScreen(),
-    );
+        debugShowCheckedModeBanner: false, home: UIScreen());
   }
 }

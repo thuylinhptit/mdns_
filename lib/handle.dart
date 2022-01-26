@@ -7,7 +7,7 @@ import 'package:multicast_dns/multicast_dns.dart';
 class Handle with ChangeNotifier {
   List<Speaker> arrSpeaker = [];
 
-  Future<void> handle() async {
+  handle() async {
     arrSpeaker.clear();
     var startTime = DateTime.now().millisecondsSinceEpoch;
     var timeDelay = 0;
@@ -18,7 +18,6 @@ class Handle with ChangeNotifier {
                 reuseAddress: true, reusePort: false, ttl: ttl!);
           })
         : MDnsClient();
-
     await client.start();
     await for (final PtrResourceRecord ptr in client
         .lookup<PtrResourceRecord>(ResourceRecordQuery.serverPointer(name))) {
@@ -42,11 +41,13 @@ class Handle with ChangeNotifier {
                     ResourceRecordQuery.addressIPv4(srv.target))) {
               var endTime = DateTime.now().millisecondsSinceEpoch;
               timeDelay = endTime - startTime;
+              print(timeDelay);
               if (arrSpeaker
                   .where((element) => element.ip == ip.address.address)
                   .isEmpty) {
                 arrSpeaker.add(
                     Speaker(srv.name, ip.address.address, deviceId, timeDelay));
+                notifyListeners();
               }
             }
           }
@@ -54,7 +55,7 @@ class Handle with ChangeNotifier {
       }
     }
     client.stop();
-    notifyListeners();
+    print('DONE');
   }
 
   Future<void> refreshLocal(BuildContext context) async {
