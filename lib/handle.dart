@@ -6,9 +6,12 @@ import 'package:multicast_dns/multicast_dns.dart';
 
 class Handle with ChangeNotifier {
   List<Speaker> arrSpeaker = [];
+  List<Speaker> arrCache = [];
+  bool isLoading = false;
 
   handle() async {
-    arrSpeaker.clear();
+    //  print(isLoading);
+    //arrSpeaker.clear();
     var startTime = DateTime.now().millisecondsSinceEpoch;
     var timeDelay = 0;
     final MDnsClient client = Platform.isAndroid == true
@@ -27,7 +30,10 @@ class Handle with ChangeNotifier {
         await client
             .lookup<TxtResourceRecord>(ResourceRecordQuery.text(ptr.domainName))
             .forEach((i) async {
-          if (i.text.contains('model=Model')) {
+          if (i.text.contains('model=Model') ||
+              (i.text.contains('model=LM-MA3') &&
+                  i.text.contains('manufacturer=LUMI'))) {
+            //  print(i);
             var str = i.text;
             var start = "\n";
             var end = "\n";
@@ -43,9 +49,14 @@ class Handle with ChangeNotifier {
               timeDelay = endTime - startTime;
               print(timeDelay);
               if (arrSpeaker
-                  .where((element) => element.ip == ip.address.address)
-                  .isEmpty) {
+                      .where((element) => element.ip == ip.address.address)
+                      .isEmpty &&
+                  arrCache
+                      .where((element) => element.ip == ip.address.address)
+                      .isEmpty) {
                 arrSpeaker.add(
+                    Speaker(srv.name, ip.address.address, deviceId, timeDelay));
+                arrCache.add(
                     Speaker(srv.name, ip.address.address, deviceId, timeDelay));
                 notifyListeners();
               }
@@ -54,12 +65,28 @@ class Handle with ChangeNotifier {
         });
       }
     }
+    for (int x = 0; x < arrSpeaker.length; x++) {
+      if (arrCache.where((element) => element.ip == arrSpeaker[x].ip).isEmpty) {
+        arrCache.add(arrSpeaker[x]);
+        print(arrSpeaker[x].ip);
+        print('+++++++');
+      }
+    }
+    for (int y = 0; y < arrCache.length; y++) {
+      if (arrSpeaker.where((element) => element.ip == arrCache[y].ip).isEmpty) {
+        arrCache.remove(arrCache[y]);
+        print(arrCache[y].ip);
+        print('--------');
+      }
+    }
     client.stop();
+    isLoading = false;
+    notifyListeners();
     print('DONE');
   }
 
   Future<void> refreshLocal(BuildContext context) async {
-    arrSpeaker.clear();
+    isLoading = true;
     notifyListeners();
     handle();
   }

@@ -16,11 +16,19 @@ class UIScreen extends StatelessWidget {
         builder: (context, handle, child) {
           return RefreshIndicator(
               child: ListView.builder(
-                itemCount: handle.arrSpeaker.length,
+                itemCount: handle.arrCache.length + 1,
                 itemBuilder: (context, i) {
-                  return Item(
-                      speaker: Provider.of<Handle>(context, listen: false)
-                          .arrSpeaker[i]);
+                  if (i == handle.arrCache.length) {
+                    return handle.isLoading == true
+                        ? const Center(
+                            child: CircularProgressIndicator(),
+                          )
+                        : Container();
+                  } else {
+                    return Item(
+                        speaker: Provider.of<Handle>(context, listen: false)
+                            .arrCache[i]);
+                  }
                 },
               ),
               onRefresh: () async {
