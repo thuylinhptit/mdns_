@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mdns/handle.dart';
 import 'package:mdns/item.dart';
+import 'package:mdns/main.dart';
 import 'package:provider/provider.dart';
 
 class UIScreen extends StatelessWidget {
@@ -14,6 +15,10 @@ class UIScreen extends StatelessWidget {
       ),
       body: Consumer<Handle>(
         builder: (context, handle, child) {
+          int timeEnd = DateTime.now().second;
+          while (timeEnd - timeStart == 5) {
+            Provider.of<Handle>(context, listen: false).refreshLocal(context);
+          }
           return RefreshIndicator(
               child: ListView.builder(
                 itemCount: handle.arrCache.length + 1,

@@ -10,8 +10,9 @@ class Handle with ChangeNotifier {
   bool isLoading = false;
 
   handle() async {
+    print('START');
     //  print(isLoading);
-    //arrSpeaker.clear();
+    arrSpeaker.clear();
     var startTime = DateTime.now().millisecondsSinceEpoch;
     var timeDelay = 0;
     final MDnsClient client = Platform.isAndroid == true
@@ -33,7 +34,6 @@ class Handle with ChangeNotifier {
           if (i.text.contains('model=Model') ||
               (i.text.contains('model=LM-MA3') &&
                   i.text.contains('manufacturer=LUMI'))) {
-            //  print(i);
             var str = i.text;
             var start = "\n";
             var end = "\n";
@@ -47,15 +47,25 @@ class Handle with ChangeNotifier {
                     ResourceRecordQuery.addressIPv4(srv.target))) {
               var endTime = DateTime.now().millisecondsSinceEpoch;
               timeDelay = endTime - startTime;
-              print(timeDelay);
+              //print(timeDelay);
               if (arrSpeaker
                       .where((element) => element.ip == ip.address.address)
                       .isEmpty &&
-                  arrCache
-                      .where((element) => element.ip == ip.address.address)
+                  arrSpeaker
+                      .where((element) => element.name == srv.name)
                       .isEmpty) {
+                //print(srv.name);
                 arrSpeaker.add(
                     Speaker(srv.name, ip.address.address, deviceId, timeDelay));
+                notifyListeners();
+              }
+              if (arrCache
+                      .where((element) => element.ip == ip.address.address)
+                      .isEmpty &&
+                  arrCache
+                      .where((element) => element.name == srv.name)
+                      .isEmpty) {
+                print(srv.name);
                 arrCache.add(
                     Speaker(srv.name, ip.address.address, deviceId, timeDelay));
                 notifyListeners();
@@ -66,18 +76,26 @@ class Handle with ChangeNotifier {
       }
     }
     for (int x = 0; x < arrSpeaker.length; x++) {
-      if (arrCache.where((element) => element.ip == arrSpeaker[x].ip).isEmpty) {
+      print(arrSpeaker[x].ip);
+    }
+    for (int x = 0; x < arrSpeaker.length; x++) {
+      if (arrCache.isEmpty ||
+          arrCache.where((element) => element.ip == arrSpeaker[x].ip).isEmpty) {
         arrCache.add(arrSpeaker[x]);
-        print(arrSpeaker[x].ip);
-        print('+++++++');
       }
     }
     for (int y = 0; y < arrCache.length; y++) {
-      if (arrSpeaker.where((element) => element.ip == arrCache[y].ip).isEmpty) {
+      if (arrSpeaker.isNotEmpty &&
+          arrSpeaker.where((element) => element.ip == arrCache[y].ip).isEmpty) {
         arrCache.remove(arrCache[y]);
-        print(arrCache[y].ip);
-        print('--------');
       }
+      if (arrSpeaker.isEmpty) {
+        arrCache.remove(arrCache[y]);
+      }
+    }
+    if (arrSpeaker.length < arrCache.length) {
+      arrCache = arrSpeaker;
+      notifyListeners();
     }
     client.stop();
     isLoading = false;
@@ -87,7 +105,7 @@ class Handle with ChangeNotifier {
 
   Future<void> refreshLocal(BuildContext context) async {
     isLoading = true;
-    notifyListeners();
     handle();
+    notifyListeners();
   }
 }

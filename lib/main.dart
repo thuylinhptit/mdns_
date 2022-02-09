@@ -4,7 +4,7 @@ import 'package:mdns/ui_screen.dart';
 import 'package:provider/provider.dart';
 
 const String name = '_airplay._tcp.local';
-
+int timeStart = DateTime.now().second;
 Future<void> main() async {
   runApp(MultiProvider(
     providers: [
