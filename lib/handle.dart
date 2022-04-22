@@ -10,8 +10,6 @@ class Handle with ChangeNotifier {
   bool isLoading = false;
 
   handle() async {
-    print('START');
-    //  print(isLoading);
     arrSpeaker.clear();
     var startTime = DateTime.now().millisecondsSinceEpoch;
     var timeDelay = 0;
